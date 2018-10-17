@@ -1,12 +1,13 @@
-ko.bindingHandlers.ko_tokenInput = {
+ko.bindingHandlers.tokenInput = {
     init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-        debugger;
+        // debugger;
         this.settings = allBindingsAccessor().settings;
         var self = this;
-        var url = settings.url;
+        var url_or_data = settings.url ? settings.url : settings.local_data;
         this.items = valueAccessor();
         element.isUpdating = false;
-        $(element).tokenInput(this.settings.url, $.extend(settings, {
+        $(element).tokenInput(url_or_data, $.extend(settings, {
+            prePopulate: self.items,
             onAdd: function (item) {
                 if (!element.isUpdating) {
                     element.isUpdating = true;
@@ -17,11 +18,14 @@ ko.bindingHandlers.ko_tokenInput = {
                     }
                 }
             },
-            onRemove: function(item) {
+            onDelete: function(item) {
                 if (!element.isUpdating) {
                     element.isUpdating = true;
                     try {
-                        self.items.remove(item);
+                        if(settings.onDeleteCallbackFunction)
+                            settings.onDeleteCallbackFunction.call(this, self.items, item);
+                        else
+                            self.items.remove(item);    // use a generic deletion (for Knockout we need to do property based lookup so this won't work)
                     } finally {
                         element.isUpdating = false;
                     }
@@ -34,7 +38,7 @@ ko.bindingHandlers.ko_tokenInput = {
     },
     update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
         var params = ko.toJS(valueAccessor());
-        debugger;
+        // debugger;
         if (!element.isUpdating) {
             element.isUpdating = true;
             try {
